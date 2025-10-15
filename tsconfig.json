@@ -1,16 +1,26 @@
 {
-    "extends": "expo/tsconfig.base",
-    "compilerOptions": {
-      "strict": true,
-      "paths": {
-        "@/*": ["./*"]
-      }
-    },
-    "include": [
-      "**/*.ts",
-      "**/*.tsx",
-      ".expo/types/**/*.ts",
-      "expo-env.d.ts",
-      "nativewind-env.d.ts"
-    ]
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "target": "esnext",
+    "moduleResolution": "nodenext",      // compatible with customConditions
+    "customConditions": ["react-native"], 
+    "jsx": "react-native",               // needed for React Native
+    "esModuleInterop": true,
+    "strict": true,
+    "module": "nodenext",
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,                      // don't output .js files
+    "isolatedModules": true,
+    "skipLibCheck": true,                // avoid type conflicts from node_modules
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
 }

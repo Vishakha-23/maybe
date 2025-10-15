@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Camera, Trophy, User, ChartBar as BarChart, Users } from 'lucide-react-native';
 
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -26,7 +27,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Record',
-          tabBarIcon: ({ size, color }) => (
+          tabBarIcon: ({ size, color } : { size: number; color: string }) => (
             <Camera size={size} color={color} />
           ),
         }}
@@ -35,7 +36,7 @@ export default function TabLayout() {
         name="analysis"
         options={{
           title: 'Analysis',
-          tabBarIcon: ({ size, color }) => (
+          tabBarIcon: ({ size, color } : { size: number; color: string }) => (
             <BarChart size={size} color={color} />
           ),
         }}
@@ -44,7 +45,7 @@ export default function TabLayout() {
         name="leaderboard"
         options={{
           title: 'Leaderboard',
-          tabBarIcon: ({ size, color }) => (
+          tabBarIcon: ({ size, color } : { size: number; color: string }) => (
             <Trophy size={size} color={color} />
           ),
         }}
@@ -53,7 +54,7 @@ export default function TabLayout() {
         name="community"
         options={{
           title: 'Community',
-          tabBarIcon: ({ size, color }) => (
+          tabBarIcon: ({ size, color } : { size: number; color: string }) => (
             <Users size={size} color={color} />
           ),
         }}
@@ -62,7 +63,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ size, color }) => (
+          tabBarIcon: ({ size, color } : { size: number; color: string }) => (
             <User size={size} color={color} />
           ),
         }}
