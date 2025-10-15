@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';  
 import {
   View,
   Text,
@@ -12,19 +12,20 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Zap, Target, Activity } from 'lucide-react-native';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Zap } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { login as firebaseLogin } from './authFunctions'; // Firebase login function
+import { login as firebaseLogin, signup as firebaseSignup } from '../authFunctions';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export default function LoginScreen() {
+export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignup, setIsSignup] = useState(false); // Toggle between login & signup
 
-  const handleLogin = async () => {
+  const handleAuth = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -33,39 +34,34 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      const user = await firebaseLogin(email, password); // Firebase login
+      let user;
+      if (isSignup) {
+        user = await firebaseSignup(email, password);
+        Alert.alert('Account Created 🎉', `Welcome, ${user.email}!`, [
+          { text: 'Continue', onPress: () => router.replace('/(tabs)') },
+        ]);
+      } else {
+        user = await firebaseLogin(email, password);
+        Alert.alert('Welcome Back!', `Login successful, ${user.email}`, [
+          { text: 'Continue', onPress: () => router.replace('/(tabs)') },
+        ]);
+      }
       setIsLoading(false);
-      Alert.alert(
-        'Welcome Back!',
-        `Login successful, ${user.email}`,
-        [
-          {
-            text: 'Continue',
-            onPress: () => router.replace('/(tabs)')
-          }
-        ]
-      );
     } catch (error: any) {
       setIsLoading(false);
       let message = 'Something went wrong!';
-      if (error.code === 'auth/user-not-found') {
-        message = 'No user found with this email.';
-      } else if (error.code === 'auth/wrong-password') {
-        message = 'Incorrect password.';
-      } else if (error.code === 'auth/invalid-email') {
-        message = 'Invalid email address.';
-      }
-      Alert.alert('Login Error', message);
+      if (error.code === 'auth/user-not-found') message = 'No user found with this email.';
+      else if (error.code === 'auth/wrong-password') message = 'Incorrect password.';
+      else if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
+      else if (error.code === 'auth/email-already-in-use') message = 'Email already registered.';
+      else if (error.code === 'auth/weak-password') message = 'Password should be at least 6 characters.';
+      Alert.alert(isSignup ? 'Signup Error' : 'Login Error', message);
     }
-  };
-
-  const handleSignUp = () => {
-    Alert.alert('Sign Up', 'Sign up functionality coming soon!');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
@@ -73,9 +69,7 @@ export default function LoginScreen() {
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <View style={styles.logoContainer}>
-              <View style={styles.logoIcon}>
-                <Zap size={32} color="#FFFFFF" />
-              </View>
+              <View style={styles.logoIcon}><Zap size={32} color="#FFFFFF" /></View>
               <Text style={styles.logoText}>BOLT</Text>
             </View>
             <Text style={styles.heroTitle}>UNLOCK YOUR{'\n'}POTENTIAL</Text>
@@ -84,17 +78,17 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          {/* Login Form */}
+          {/* Form Section */}
           <View style={styles.formSection}>
             <View style={styles.formContainer}>
-              <Text style={styles.formTitle}>Welcome Back</Text>
-              <Text style={styles.formSubtitle}>Sign in to continue your journey</Text>
+              <Text style={styles.formTitle}>{isSignup ? 'Create Account' : 'Welcome Back'}</Text>
+              <Text style={styles.formSubtitle}>
+                {isSignup ? 'Sign up to start your journey' : 'Sign in to continue your journey'}
+              </Text>
 
               {/* Email Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Mail size={20} color="#666666" />
-                </View>
+                <View style={styles.inputIcon}><Mail size={20} color="#666666" /></View>
                 <TextInput
                   style={styles.textInput}
                   placeholder="Email address"
@@ -103,15 +97,12 @@ export default function LoginScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  autoCorrect={false}
                 />
               </View>
 
               {/* Password Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <Lock size={20} color="#666666" />
-                </View>
+                <View style={styles.inputIcon}><Lock size={20} color="#666666" /></View>
                 <TextInput
                   style={styles.textInput}
                   placeholder="Password"
@@ -120,84 +111,39 @@ export default function LoginScreen() {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
-                  autoCorrect={false}
                 />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff size={20} color="#666666" />
-                  ) : (
-                    <Eye size={20} color="#666666" />
-                  )}
+                <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff size={20} color="#666666" /> : <Eye size={20} color="#666666" />}
                 </TouchableOpacity>
               </View>
 
               {/* Forgot Password */}
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
+              {!isSignup && (
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              )}
 
-              {/* Login Button */}
+              {/* Login / Signup Button */}
               <TouchableOpacity
                 style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-                onPress={handleLogin}
+                onPress={handleAuth}
                 disabled={isLoading}
               >
                 <Text style={styles.loginButtonText}>
-                  {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+                  {isLoading ? (isSignup ? 'CREATING ACCOUNT...' : 'SIGNING IN...') : (isSignup ? 'SIGN UP' : 'SIGN IN')}
                 </Text>
                 <ArrowRight size={20} color="#FFFFFF" />
               </TouchableOpacity>
 
-              {/* Divider */}
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              {/* Social Login */}
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonText}>Continue with Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonText}>Continue with Apple</Text>
-              </TouchableOpacity>
-
-              {/* Sign Up Link */}
+              {/* Toggle Login/Signup */}
               <View style={styles.signUpContainer}>
-                <Text style={styles.signUpText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={handleSignUp}>
-                  <Text style={styles.signUpLink}>Sign Up</Text>
+                <Text style={styles.signUpText}>
+                  {isSignup ? 'Already have an account? ' : "Don't have an account? "}
+                </Text>
+                <TouchableOpacity onPress={() => setIsSignup(!isSignup)}>
+                  <Text style={styles.signUpLink}>{isSignup ? 'Sign In' : 'Sign Up'}</Text>
                 </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Features Section */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.featuresTitle}>WHY CHOOSE BOLT?</Text>
-            <View style={styles.featuresGrid}>
-              <View style={styles.featureCard}>
-                <View style={styles.featureIcon}>
-                  <Target size={24} color="#FFFFFF" />
-                </View>
-                <Text style={styles.featureTitle}>AI Analysis</Text>
-                <Text style={styles.featureDescription}>
-                  Advanced motion detection and performance analysis
-                </Text>
-              </View>
-              <View style={styles.featureCard}>
-                <View style={styles.featureIcon}>
-                  <Activity size={24} color="#FFFFFF" />
-                </View>
-                <Text style={styles.featureTitle}>Real-time Tracking</Text>
-                <Text style={styles.featureDescription}>
-                  Track your progress with detailed insights
-                </Text>
               </View>
             </View>
           </View>
@@ -207,6 +153,7 @@ export default function LoginScreen() {
   );
 }
 
+// Keep your existing styles here
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   keyboardView: { flex: 1 },
